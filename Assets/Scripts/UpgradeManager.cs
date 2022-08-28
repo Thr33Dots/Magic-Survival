@@ -87,7 +87,7 @@ public class UpgradeManager : MonoBehaviour
             int randOption = Random.Range(0, amountOfOptions);
             PickOption(randOption, previousPick);
         }
-        else if (random < chanceForPrevReappear)
+        else if (random < chanceForPrevReappear && previousUpgrades.Count > 0)
         {
             int randOption = Random.Range(0, amountOfOptions);
             int randUpgrade = previousUpgrades[Random.Range(0, previousUpgrades.Count)];

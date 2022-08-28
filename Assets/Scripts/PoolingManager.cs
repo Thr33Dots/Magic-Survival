@@ -24,6 +24,7 @@ public class PoolingManager : MonoBehaviour
         Enemy2,
         Enemy3,
         Enemy4,
+        Obstacles,
     }
 
     public void SpawnIntialObjects()
