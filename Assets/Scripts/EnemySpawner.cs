@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
+    public float spawnRate;
     public float radius;
 
     float spawnTimer = 0;
@@ -27,7 +28,6 @@ public class EnemySpawner : MonoBehaviour
     }
 
     public EnemySpawnWaves[] enemySpawnWaves;
-    List<GameObject> activeEnemies = new List<GameObject>();
 
     public void Awake()
     {
@@ -72,18 +72,7 @@ public class EnemySpawner : MonoBehaviour
 
             GameObject enemyObj = poolingManager.SpawnObject(enemySpawnWaves[wave].enemiesToSpawn[Random.Range(0, enemySpawnWaves[wave].enemiesToSpawn.Length)], pos, Quaternion.identity);
             enemyObj.GetComponent<EnemyScript>().Init();
-            activeEnemies.Add(enemyObj);
         }
-    }
-
-    public void RemoveEnemy(GameObject _enemy)
-    {
-        activeEnemies.Remove(_enemy);
-    }
-
-    public List<GameObject> GetActiveEnemies()
-    {
-        return activeEnemies;
     }
 
     void NextWave()

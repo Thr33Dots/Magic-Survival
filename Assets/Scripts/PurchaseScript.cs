@@ -18,7 +18,7 @@ public class PurchaseScript : MonoBehaviour
 
         int picked = Random.Range(1, customizationSelections.Length);
 
-        PlayerPrefs.SetInt("customization" + picked, 0);
+        PlayerPrefs.SetInt("customization" + picked, 1);
 
         characterImage.sprite = customizationSelections[picked].image;
         characterName.text = customizationSelections[picked].name;

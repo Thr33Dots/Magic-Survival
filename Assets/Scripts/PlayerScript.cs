@@ -8,8 +8,6 @@ public class PlayerScript : MonoBehaviour
     public GameObject projectile;
     public GameObject spinningSawObject;
     public GameObject sentryObject;
-    public GameObject spikeObject;
-    public GameObject heads;
 
     public GameObject playerModel;
     public Animator modelAnimator;
@@ -24,9 +22,6 @@ public class PlayerScript : MonoBehaviour
     public PlayerMovement playerMovement;
     public Joystick aimingJoystick;
     public PoolingManager poolingManager;
-    public EnemySpawner enemySpawner;
-
-    public CustomizeMenuManager customizeMenuManager;
 
     public int xpToLevelUp;
     public float xpIncr;
@@ -38,11 +33,8 @@ public class PlayerScript : MonoBehaviour
     int coins;
     int score;
     float health;
-
     float fireRateTimer;
     float sentriesFireRateTimer;
-    float lightningTimer;
-    float spikeSpawnTimer;
     float regenerationTimer;
 
     bool paused = true;
@@ -59,6 +51,9 @@ public class PlayerScript : MonoBehaviour
         [Header("Player stats")]
         public float playerSpeed; 
         public float magnetStrength; 
+        public float sawSpinSpeed; 
+        public float sentrySpinSpeed;
+        public float sentryFireRate;
 
         [Header("Health stats")]
         public float maxHealth;
@@ -82,15 +77,6 @@ public class PlayerScript : MonoBehaviour
         public float explosionSize;
         public float explosionDamage;
         public float damageDistance;
-
-        [Header("Special stats")]
-        public float sawSpinSpeed;
-        public float sentrySpinSpeed;
-        public float sentryFireRate;
-        public float lightningRate;
-        public float lightningDamage;
-        public float spikeDestroyDuration;
-        public float spikeSpawnRate;
     }
 
     public UpgradableStats upgradableStats;
@@ -118,8 +104,6 @@ public class PlayerScript : MonoBehaviour
         sentry,
         jackOfAllTrades,
         distanceDamage,
-        lightningStrike,
-        spike,
     };
     public enum ANIMATIONS
     {
@@ -144,8 +128,6 @@ public class PlayerScript : MonoBehaviour
         coins = PlayerPrefs.GetInt("Coins", 0);
         fireRateTimer = upgradableStats.fireRate;
         sentriesFireRateTimer = upgradableStats.sentryFireRate;
-        lightningTimer = upgradableStats.lightningRate;
-        spikeSpawnTimer = upgradableStats.spikeSpawnRate;
 
         //update UI
         inGameUI.UpdateHealthBar(health, upgradableStats.maxHealth);
@@ -157,7 +139,6 @@ public class PlayerScript : MonoBehaviour
         playerMovement.UpdateMovemnentSpeed(upgradableStats.playerSpeed);
 
         SetPaused(true);
-        SetHead();
 
         #if UNITY_STANDALONE_WIN
             playingOnComputer = true;
@@ -178,8 +159,6 @@ public class PlayerScript : MonoBehaviour
         {
             fireRateTimer -= Time.deltaTime;
             sentriesFireRateTimer -= Time.deltaTime;
-            lightningTimer -= Time.deltaTime;
-            spikeSpawnTimer -= Time.deltaTime;
 
             if (playingOnComputer)
             {
@@ -240,7 +219,6 @@ public class PlayerScript : MonoBehaviour
                 if (sentriesFireRateTimer <= 0)
                 {
                     sentriesFireRateTimer = upgradableStats.sentryFireRate;
-
                     for (int i = 0; i < sentries.Count; i++)
                     {
                         Vector3 newAngle = new Vector3(
@@ -252,35 +230,10 @@ public class PlayerScript : MonoBehaviour
                 }
             }
 
-            if (upgradableStats.lightningRate > 0 && lightningTimer <= 0)
-            {
-                lightningTimer = 10 - upgradableStats.lightningRate;
-
-                List<GameObject> activeEnemies = enemySpawner.GetActiveEnemies();
-                if (activeEnemies.Count > 0)
-                {
-                    int randomEnemy = Random.Range(0, activeEnemies.Count);
-
-                    StartCoroutine(activeEnemies[randomEnemy].GetComponent<EnemyScript>().LightningStrike(upgradableStats.lightningDamage));
-                }
-            }
-            if (upgradableStats.spikeSpawnRate > 0 && spikeSpawnTimer <= 0)
-            {
-                spikeSpawnTimer = 5 - upgradableStats.spikeSpawnRate;
-                Destroy(Instantiate(spikeObject, transform.position, Quaternion.identity), upgradableStats.spikeDestroyDuration);
-            }
-
             //DEBUG
             if (Input.GetKey(KeyCode.Q))
             {
                 IncreaseXP(xpToLevelUp - xp);
-            }
-            if (Input.GetKey(KeyCode.E))
-            {
-                for(int i = 1; i < customizeMenuManager.GetCustomizationSelectionsArray().Length; i++)
-                {
-                    PlayerPrefs.SetInt("customization" + i, 1);
-                }
             }
         }
     }
@@ -333,10 +286,7 @@ public class PlayerScript : MonoBehaviour
 
     void PlayerDied()
     {
-        if (menuUI.hasSound)
-        {
-            AudioSource.PlayClipAtPoint(SFX_Death, new Vector3(0, 0, 0), 1.0f);
-        }
+        AudioSource.PlayClipAtPoint(SFX_Death, new Vector3(0, 0, 0), 1.0f);
 
         if (score > PlayerPrefs.GetInt("HighScore"))
         {
@@ -346,8 +296,7 @@ public class PlayerScript : MonoBehaviour
         PlayAnimation(ANIMATIONS.Die);
 
         uiManager.ShowGameOverScreen(true);
-        uiManager.ShowInGameUI(false);
-        uiManager.ShowUpgradeUI(false);
+        uiManager.ShowInGameUI(true);
         menuUI.UpdateScoreText(score);
         menuUI.UpdateHighScoreText(PlayerPrefs.GetInt("HighScore"));
         menuUI.GameOver(coins);
@@ -356,10 +305,7 @@ public class PlayerScript : MonoBehaviour
 
     void IncreaseXP(int _xp)
     {
-        if (menuUI.hasSound)
-        {
-            AudioSource.PlayClipAtPoint(SFX_Collect, new Vector3(0, 0, 0), 1.0f);
-        }
+        AudioSource.PlayClipAtPoint(SFX_Collect, new Vector3(0, 0, 0), 1.0f);
 
         xp += _xp;
 
@@ -372,10 +318,7 @@ public class PlayerScript : MonoBehaviour
     }
     public void IncreaseCoins(int _coin)
     {
-        if (menuUI.hasSound)
-        {
-            AudioSource.PlayClipAtPoint(SFX_Collect, new Vector3(0, 0, 0), 1.0f);
-        }
+        AudioSource.PlayClipAtPoint(SFX_Collect, new Vector3(0, 0, 0), 1.0f);
 
         coins += _coin;
 
@@ -401,10 +344,7 @@ public class PlayerScript : MonoBehaviour
 
         xpToLevelUp = (int)Mathf.Ceil(xpToLevelUp * xpIncr);
 
-        if (menuUI.hasSound)
-        {
-            AudioSource.PlayClipAtPoint(SFX_Menu_Pop_up, new Vector3(0, 0, 0), 1.0f);
-        }
+        AudioSource.PlayClipAtPoint(SFX_Menu_Pop_up, new Vector3(0, 0, 0), 1.0f);
 
         uiManager.ShowUpgradeUI(true);
         upgradeManager.QueueUpgrades();
@@ -445,16 +385,6 @@ public class PlayerScript : MonoBehaviour
         //GameObject muzzleObj = Instantiate(muzzleVFX, _pos, Quaternion.Euler(_direction));
         //muzzleObj.transform.SetParent(transform);
         //Destroy(muzzleObj, muzzleObj.transform.GetChild(0).GetComponent<ParticleSystem>().main.duration);
-    }
-
-    public void SetHead()
-    {
-        foreach(Transform child in heads.transform)
-        {
-            child.gameObject.SetActive(false);
-        }
-
-        heads.transform.GetChild(PlayerPrefs.GetInt("PlayerSkin")).gameObject.SetActive(true);
     }
 
     public UpgradableStats GetUpgradableStats()
@@ -594,14 +524,6 @@ public class PlayerScript : MonoBehaviour
 
             case UPGRADES.distanceDamage:
                 upgradableStats.damageDistance  += _positiveUpgrade;
-                break;
-
-            case UPGRADES.lightningStrike:
-                upgradableStats.lightningRate   += _positiveUpgrade;
-                break;
-
-            case UPGRADES.spike:
-                upgradableStats.spikeSpawnRate  += _positiveUpgrade;
                 break;
         }
 
