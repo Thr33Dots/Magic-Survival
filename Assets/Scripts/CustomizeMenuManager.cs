@@ -7,7 +7,6 @@ public class CustomizeMenuManager : MonoBehaviour
 {
     public Scrollbar scrollbar;
     public GameObject characterSelect;
-    public PlayerScript player;
     public RectTransform content;
     public Transform startingPos;
     public float spacing;
@@ -23,6 +22,7 @@ public class CustomizeMenuManager : MonoBehaviour
         [System.NonSerialized]
         public bool isSelected;
     }
+
     public CustomizationSelections[] customizationSelections;
 
     // Start is called before the first frame update
@@ -101,7 +101,5 @@ public class CustomizeMenuManager : MonoBehaviour
         PlayerPrefs.SetInt("PlayerSkin", selectedCharacter);
 
         SetUpCharacterSelections();
-
-        player.SetHead();
     }
 }
